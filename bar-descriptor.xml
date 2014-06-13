@@ -97,5 +97,8 @@
     <env var="LD_LIBRARY_PATH" value="app/native/lib:/usr/lib/qt4/lib"/>
     <permission system="true">run_native</permission>
     <permission system="true">_sys_run_headless</permission>
+    <permission system="true">_sys_headless_nostop</permission>
+	<permission system="true">_sys_manage_pimdomain_external_accounts</permission>
+	<permission system="true">_sys_access_pim_unified</permission>
 
 </qnx>

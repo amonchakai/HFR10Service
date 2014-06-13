@@ -453,7 +453,7 @@ void HeadlessApplication::insertNewFavEntries() {
                     QVariantMap itemMap = item->toMap();
                     m_ItemsInHub[n].m_Timestamp = list->at(i)->getDetailedTimestamp();
                     itemMap["timestamp"] = QDateTime::fromString(list->at(i)->getDetailedTimestamp().mid(0,10) + " " + list->at(i)->getDetailedTimestamp().mid(23), "dd-MM-yyyy HH:mm").toMSecsSinceEpoch();
-                    itemMap["subject"] = list->at(i)->getLastAuthor();
+                    itemMap["description"] = list->at(i)->getLastAuthor();
                     m_Hub->updateHubItem(m_Hub->getCache()->lastCategoryId(), m_ItemsInHub.at(n).m_HubId, itemMap, false);
 
                     if(itemMap["readCount"] == 1)
