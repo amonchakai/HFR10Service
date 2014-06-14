@@ -17,7 +17,7 @@ HubIntegration::HubIntegration(QObject *parent) :
             m_Settings(NULL),
             m_Initialized(false),
             m_CategoriesInitialized(false),
-            m_ItemMimeType("hub/vnd.test.item"),
+            m_ItemMimeType("hub/vnd.hfrblack.item"),
             m_ItemUnreadIconFilename("images/icon_MarkUnread.png"),
             m_ItemReadIconFilename("images/icon_MarkRead.png") {
 

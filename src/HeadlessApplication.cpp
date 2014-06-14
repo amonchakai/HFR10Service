@@ -68,10 +68,10 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
     // ---------------------------------------------------------------------
     // prepare to process events
 
-    qDebug() << "-----------------------------------\nStart Headless app!\n------------------------------------";
+    qDebug() << "-----------------------------------\nStart Headless app!...\nWait for ticks\n------------------------------------";
 
     m_Timer = new QTimer(this);
-    m_Timer->setInterval(m_AppSettings->getHubRefreshRate() * 60000);         // every 10s
+    m_Timer->setInterval(m_AppSettings->getHubRefreshRate() * 60000);         // refresh based on the setting (in minutes)
 //    m_Timer->setInterval(10000);         // every 10s
     m_Timer->setSingleShot(false);
     connect(m_Timer, SIGNAL(timeout()), this, SLOT(periodicCheck()));
@@ -107,7 +107,7 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
     Q_ASSERT(connectResult);
 
     Q_UNUSED(connectResult);
-        connectResult = connect( m_PrivateMessageController,
+    connectResult = connect( m_PrivateMessageController,
                  SIGNAL(autentificationFailed()),
                  this,
                  SLOT(checkLogin()));
@@ -130,7 +130,9 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
     // initial load
     onSystemLanguageChanged();
 */
+
 }
+
 
 void HeadlessApplication::onSystemLanguageChanged()
 {
@@ -219,7 +221,6 @@ void HeadlessApplication::onInvoked(const bb::system::InvokeRequest& request) {
 void HeadlessApplication::markHubItemRead(QVariantMap itemProperties) {
 
     qint64 itemId;
-    qint64 itemCategoryId;
 
     if (itemProperties["sourceId"].toString().length() > 0) {
         itemId = itemProperties["sourceId"].toLongLong();
@@ -233,7 +234,6 @@ void HeadlessApplication::markHubItemRead(QVariantMap itemProperties) {
 void HeadlessApplication::markHubItemUnread(QVariantMap itemProperties) {
 
     qint64 itemId;
-    qint64 itemCategoryId;
 
     if (itemProperties["sourceId"].toString().length() > 0) {
         itemId = itemProperties["sourceId"].toLongLong();
@@ -258,6 +258,8 @@ void HeadlessApplication::removeHubItem(QVariantMap itemProperties) {
 
 
 void HeadlessApplication::periodicCheck() {
+
+    //qDebug() << "tick!";
 
     m_AppSettings->loadSettings();
     m_Timer->setInterval(m_AppSettings->getHubRefreshRate() * 60000);
