@@ -157,9 +157,8 @@ void ListFavoriteController::connectionTimedOut() {
 
 void ListFavoriteController::parse(const QString &page) {
 
-	//for(int i = 0 ; i < m_Datas->length() ; ++i)
-	//    if((*m_Datas)[i] != NULL)
-	//        (*m_Datas)[i]->deleteLater();
+	for(int i = 0 ; i < m_Datas->length() ; ++i)
+	    (*m_Datas)[i]->deleteLater();
 	m_Datas->clear();
 
 	QRegExp andAmp("&amp;");

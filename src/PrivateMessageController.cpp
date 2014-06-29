@@ -161,8 +161,8 @@ void PrivateMessageController::checkMessageDeleted() {
 
 void PrivateMessageController::parse(const QString &page) {
 
-	//for(int i = 0 ; i < m_Datas->length() ; ++i)
-	//	(*m_Datas)[i]->deleteLater();
+    for(int i = 0 ; i < m_Datas->length() ; ++i)
+		(*m_Datas)[i]->deleteLater();
 	m_Datas->clear();
 
 	QRegExp andAmp("&amp;");
@@ -221,7 +221,7 @@ void PrivateMessageController::parseMessageListing(bool read, const QString &thr
 
 	item->setRead(read);
 
-	QRegExp addresseeRegexp("<td class=\"sujetCase6 cBackCouleurTab[0-9] \"><a rel=\"nofollow\" href=\".*\" class=\"Tableau\">(.+)</a></td>");
+	QRegExp addresseeRegexp("<td class=\"sujetCase6 cBackCouleurTab[0-9] \"><a rel=\"nofollow\" href=\"[^\"]+pseudo=([^\"]+)\"");
 	addresseeRegexp.setCaseSensitivity(Qt::CaseSensitive);
 	addresseeRegexp.setMinimal(true);
 

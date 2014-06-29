@@ -423,13 +423,6 @@ void HeadlessApplication::insertNewFavEntries() {
 
                 //            QDateTime::fromString(s.mid(0,10) + s.mid(12), "dd-MM-yyyy HH:mm");
 
-            qDebug() << m_Hub->getCache()->lastCategoryId();
-            qDebug() << list->at(i)->getTitle();
-            qDebug() << list->at(i)->getLastAuthor();
-            qDebug() << list->at(i)->getDetailedTimestamp();
-            qDebug() << list->at(i)->getDetailedTimestamp().mid(0,10) + " " + list->at(i)->getDetailedTimestamp().mid(23);
-
-
             m_Hub->addHubItem(m_Hub->getCache()->lastCategoryId(), entry, list->at(i)->getTitle(), list->at(i)->getLastAuthor(), QDateTime::fromString(list->at(i)->getDetailedTimestamp().mid(0,10) + " " + list->at(i)->getDetailedTimestamp().mid(23), "dd-MM-yyyy HH:mm").toMSecsSinceEpoch(), QString::number(1),"", "",  true);
 
             qint64 itemId;
