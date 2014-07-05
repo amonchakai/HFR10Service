@@ -17,6 +17,7 @@ HubIntegration::HubIntegration(QObject *parent) :
             m_Settings(NULL),
             m_Initialized(false),
             m_CategoriesInitialized(false),
+            m_NbHubCreated(0),
             m_ItemMimeType("hub/vnd.hfrblack.item"),
             m_ItemUnreadIconFilename("images/icon_MarkUnread.png"),
             m_ItemReadIconFilename("images/icon_MarkRead.png") {
@@ -28,7 +29,7 @@ HubIntegration::HubIntegration(QObject *parent) :
 
     // on device restart / update, it may be necessary to reload the Hub
     if (m_UDSUtils->reloadHub()) {
-        m_UDSUtils->cleanupAccountsExcept(-1, "HFR10");
+        m_UDSUtils->cleanupAccountsExcept(m_HubCache->accountId(), "HFR10");
         m_UDSUtils->initNextIds();
     }
 
@@ -44,44 +45,22 @@ HubIntegration::~HubIntegration() {
 
 
 void HubIntegration::initialize() {
-    if(m_Initialized)
+
+    qDebug() << " ------------------------ Initialisation ---------------------";
+
+    if(m_Initialized && m_UDSUtils->getStatus() == UDS_REGISTRATION_EXISTS)
         return ;
 
 
     if (m_HubCache->accountId() <= 0) {
 
-        qint64 hubAccountId = m_UDSUtils->addAccount("HFR10", "HFR10", "com.HFR10.hub", "pierre.lebreton.HFRBlack",
-                                    "images/whiteFace.png", "", "images/whiteFace.png", QString(tr("Private message")),
-                                    true, UDS_ACCOUNT_TYPE_SOCIAL);
-
-        if(hubAccountId > 0) {
-            m_HubCache->setAccountId(hubAccountId);
-            m_HubCache->setAccountName("HFR10");
-        } else {
-            qWarning() << "Registration to hub failed!";
-        }
-
-        int retVal = m_UDSUtils->addAccountAction(m_HubCache->accountId(), QString("bb.action.COMPOSE"), QString(tr("Compose")),
-                                                     "pierre.lebreton.HFRBlack", QString("application"), "images/icon_write.png", m_ItemMimeType, UDS_PLACEMENT_BAR);
-        if (retVal != 0) {
-            qDebug() << "HubAccount::initialize: addAccountActionData: bb.action.COMPOSE : " << " retval: " << retVal;
-        }
-
-        retVal = m_UDSUtils->addItemAction(m_HubCache->accountId(), QString("bb.action.MARKREAD"), QString(tr("Mark Read")),
-                                         "pierre.lebreton.HFRBlack.Headless", QString("application.headless"), m_ItemReadIconFilename, m_ItemMimeType, UDS_PLACEMENT_OVERFLOW);
-        if (retVal != 0) {
-            qDebug() << "HubAccount::addHubItem: addItmActionData: addItmAction: bb.action.MARKREAD : " << " retval: " << retVal;
-        }
-
-        retVal = m_UDSUtils->addItemAction(m_HubCache->accountId(), QString("bb.action.MARKUNREAD"), QString(tr("Mark Unread")),
-                                        "pierre.lebreton.HFRBlack.Headless", QString("application.headless"), m_ItemUnreadIconFilename, m_ItemMimeType, UDS_PLACEMENT_OVERFLOW);
-        if (retVal != 0) {
-            qDebug() << "HubAccount::addHubItem: addItmActionData: addItmAction: bb.action.MARKUNREAD : " << " retval: " << retVal;
-        }
+        qDebug() << " ------------------------ Create ---------------------";
+        createAccount();
 
     }  else {
-         m_UDSUtils->restoreNextIds(m_HubCache->accountId(), m_HubCache->lastCategoryId()+1, m_HubCache->lastItemId()+1);
-        // remove();
+        qDebug() << " ------------------------ Existing ---------------------";
+        m_UDSUtils->restoreNextIds(m_HubCache->accountId(), m_HubCache->lastCategoryId()+1, m_HubCache->lastItemId()+1);
+
     }
 
 
@@ -90,6 +69,36 @@ void HubIntegration::initialize() {
 
 }
 
+void HubIntegration::createAccount() {
+    qint64 hubAccountId = m_UDSUtils->addAccount("HFR10", "HFR10", "com.HFR10.hub", "pierre.lebreton.HFRBlack",
+                                        "images/whiteFace.png", "", "images/whiteFace.png", QString(tr("Private message")),
+                                        true, UDS_ACCOUNT_TYPE_SOCIAL);
+
+    if(hubAccountId > 0) {
+        m_HubCache->setAccountId(hubAccountId);
+        m_HubCache->setAccountName("HFR10");
+    } else {
+        qWarning() << "Registration to hub failed!";
+    }
+
+    int retVal = m_UDSUtils->addAccountAction(m_HubCache->accountId(), QString("bb.action.COMPOSE"), QString(tr("Compose")),
+                                                         "pierre.lebreton.HFRBlack", QString("application"), "images/icon_write.png", m_ItemMimeType, UDS_PLACEMENT_BAR);
+    if (retVal != 0) {
+        qDebug() << "HubAccount::initialize: addAccountActionData: bb.action.COMPOSE : " << " retval: " << retVal;
+    }
+
+    retVal = m_UDSUtils->addItemAction(m_HubCache->accountId(), QString("bb.action.MARKREAD"), QString(tr("Mark Read")),
+                                             "pierre.lebreton.HFRBlack.Headless", QString("application.headless"), m_ItemReadIconFilename, m_ItemMimeType, UDS_PLACEMENT_OVERFLOW);
+    if (retVal != 0) {
+        qDebug() << "HubAccount::addHubItem: addItmActionData: addItmAction: bb.action.MARKREAD : " << " retval: " << retVal;
+    }
+
+    retVal = m_UDSUtils->addItemAction(m_HubCache->accountId(), QString("bb.action.MARKUNREAD"), QString(tr("Mark Unread")),
+                                            "pierre.lebreton.HFRBlack.Headless", QString("application.headless"), m_ItemUnreadIconFilename, m_ItemMimeType, UDS_PLACEMENT_OVERFLOW);
+    if (retVal != 0) {
+        qDebug() << "HubAccount::addHubItem: addItmActionData: addItmAction: bb.action.MARKUNREAD : " << " retval: " << retVal;
+    }
+}
 
 void HubIntegration::remove() {
 
@@ -118,6 +127,21 @@ bool HubIntegration::addHubItem(qint64 categoryId, QVariantMap &itemMap, QString
 
     if (retVal <= 0) {
         qDebug() << "HubAccount::addHubItem: addItem failed for item: " << name << ", category: " << categoryId << ", account: "<< m_HubCache->accountId() << ", retVal: "<< retVal << "\n";
+
+        // insertion failed, the reload did not work, we may need to recreate a new account...
+        // But we make sure that appends only once... At least once every start of the application...
+        if(m_NbHubCreated == 0) {
+            remove();           // remove old account
+            createAccount();    // create a new account
+            m_NbHubCreated++;   // make sure we do this only once...
+
+            // try again inserting item
+            retVal = m_UDSUtils->addItem(m_HubCache->accountId(), categoryId, itemMap, name, subject, m_ItemMimeType, m_ItemUnreadIconFilename,
+                                            itemRead, itemSyncId, itemUserData, itemExtendedData, timestamp, itemContextState, notify);
+            if (retVal > 0) {
+                m_HubCache->addItem(itemMap);
+            }
+        }
     } else {
         m_HubCache->addItem(itemMap);
     }

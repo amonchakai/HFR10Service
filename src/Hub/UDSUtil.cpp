@@ -118,6 +118,10 @@ void UDSUtil::resetReloadHub() {
     _reloadHub = false;
 }
 
+int UDSUtil::getStatus() {
+    return uds_get_service_status(_udsHandle);
+}
+
 bool UDSUtil::restoreNextIds(qint64 nextAccountId, qint64 nextCategoryId, qint64 nextItemId) {
     bool retVal = true;
 

@@ -24,6 +24,7 @@ private:
     QSettings   *m_Settings;
     bool         m_Initialized;
     bool         m_CategoriesInitialized;
+    int          m_NbHubCreated;
 
     QString                                          m_ItemMimeType;
     QString                                          m_ItemUnreadIconFilename;
@@ -37,6 +38,8 @@ public:
     inline HubCache*         getCache()          { return m_HubCache; }
 
     void initialize();
+    void createAccount();
+
     void remove();
     bool addHubItem(qint64 categoryId, QVariantMap &itemMap, QString name, QString subject, qint64 timestamp, QString itemSyncId,  QString itemUserData, QString itemExtendedData, bool notify);
     void initializeCategories(QVariantList newCategories);

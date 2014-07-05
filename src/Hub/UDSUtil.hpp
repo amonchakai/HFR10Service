@@ -69,6 +69,9 @@ public:
      */
     void resetReloadHub();
 
+
+    int getStatus();
+
     /*
      *   Restore values for next IDs from external cache.
      */

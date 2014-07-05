@@ -64,11 +64,11 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
     m_AppSettings = new Settings();
     m_AppSettings->loadSettings();
 
-
     // ---------------------------------------------------------------------
     // prepare to process events
 
     qDebug() << "-----------------------------------\nStart Headless app!...\nWait for ticks\n------------------------------------";
+
 
     m_Timer = new QTimer(this);
     m_Timer->setInterval(m_AppSettings->getHubRefreshRate() * 60000);         // refresh based on the setting (in minutes)
@@ -264,7 +264,6 @@ void HeadlessApplication::periodicCheck() {
     m_AppSettings->loadSettings();
     m_Timer->setInterval(m_AppSettings->getHubRefreshRate() * 60000);
 
-
     m_PrivateMessageController->getMessages();
     if(m_AppSettings->getNotifBlue() || m_AppSettings->getNotifGreen() || m_AppSettings->getNotifOrange() || m_AppSettings->getNotifPink() || m_AppSettings->getNotifPurple()) {
         m_ListFavoriteController->getFavorite();
@@ -340,6 +339,7 @@ void HeadlessApplication::insertNewEntries() {
                     QVariantMap itemMap = item->toMap();
                     m_ItemsInHub[n].m_Timestamp = list->at(i)->getTimestamp();
                     itemMap["timestamp"] = QDateTime::fromString(list->at(i)->getTimestamp().mid(0,10) + list->at(i)->getTimestamp().mid(12), "dd-MM-yyyy HH:mm").toMSecsSinceEpoch();
+                    itemMap["url"] = list->at(i)->getUrlLastPage();
                     m_Hub->updateHubItem(m_Hub->getCache()->lastCategoryId(), m_ItemsInHub.at(n).m_HubId, itemMap, !list->at(i)->isRead());
                 }
 
@@ -449,6 +449,7 @@ void HeadlessApplication::insertNewFavEntries() {
                     m_ItemsInHub[n].m_Timestamp = list->at(i)->getDetailedTimestamp();
                     itemMap["timestamp"] = QDateTime::fromString(list->at(i)->getDetailedTimestamp().mid(0,10) + " " + list->at(i)->getDetailedTimestamp().mid(23), "dd-MM-yyyy HH:mm").toMSecsSinceEpoch();
                     itemMap["description"] = list->at(i)->getLastAuthor();
+                    itemMap["url"] = list->at(i)->getUrlLastPostRead();
                     m_Hub->updateHubItem(m_Hub->getCache()->lastCategoryId(), m_ItemsInHub.at(n).m_HubId, itemMap, false);
 
                     if(itemMap["readCount"] == 1)
