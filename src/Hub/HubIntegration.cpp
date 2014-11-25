@@ -30,11 +30,13 @@ HubIntegration::HubIntegration(QObject *parent) :
     // on device restart / update, it may be necessary to reload the Hub
     if (m_UDSUtils->reloadHub()) {
         m_UDSUtils->cleanupAccountsExcept(m_HubCache->accountId(), "HFR10");
-        m_UDSUtils->initNextIds();
+        //m_UDSUtils->initNextIds();
     }
 
-    initialize();
     //remove();
+
+    //initialize();
+    remove();
 
 }
 
@@ -51,8 +53,9 @@ void HubIntegration::initialize() {
     if(m_Initialized && m_UDSUtils->getStatus() == UDS_REGISTRATION_EXISTS)
         return ;
 
+    createAccount();
 
-    if (m_HubCache->accountId() <= 0) {
+   if (m_HubCache->accountId() <= 0) {
 
         qDebug() << " ------------------------ Create ---------------------";
         createAccount();

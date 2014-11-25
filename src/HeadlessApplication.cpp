@@ -50,7 +50,7 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
     // ---------------------------------------------------------------------
     // HUB integration
     m_Hub = new HubIntegration();
-
+/*
     QVariantList categories;
     QVariantMap map;
     map["name"] = "Private Message";
