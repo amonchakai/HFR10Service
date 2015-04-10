@@ -39,6 +39,8 @@
 
 using namespace bb::cascades;
 
+bool HeadlessApplication::m_Logs = false;
+
 HeadlessApplication::HeadlessApplication(bb::Application *app) :
         QObject(app),
         m_InvokeManager(new bb::system::InvokeManager()),
@@ -73,8 +75,6 @@ HeadlessApplication::HeadlessApplication(bb::Application *app) :
              SLOT(onInvoked(const bb::system::InvokeRequest&)));
 
     Q_ASSERT(connectResult);
-
-    loadTags();
 
 }
 
@@ -257,6 +257,11 @@ void HeadlessApplication::resynchHub() {
         return;
     }
 
+    QSettings settings("Amonchakai", "HFR10");
+    m_Logs = settings.value("LogEnabled", false).toBool();
+
+    qDebug() << "Headless Logs: " << m_Logs;
+
     getPrivateMessages();
 
 
@@ -341,6 +346,19 @@ void HeadlessApplication::parse(const QString &page) {
     QRegExp inf("&lt;");
     QRegExp sup("&gt;");
 
+
+
+
+    if(m_Logs) {
+        QVariantList hubItems = m_Hub->items();
+        QVariantMap itemMap;
+
+        qDebug() << "Items in the Hub";
+        for(int i = 0 ; i < hubItems.length() ; ++i) {
+            itemMap = hubItems.at(i).toMap();
+            qDebug() << "id: " << itemMap["sourceId"].toLongLong() << " timestamp " <<  itemMap["timestamp"].toLongLong() << " readCount " << itemMap["readCount"].toInt();
+        }
+    }
 
     // ----------------------------------------------------------------------------------------------
     // Parse unread MP using regexp
@@ -447,13 +465,12 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
 
     qint64 timestamp = QDateTime::fromString(item->getTimestamp().mid(0,10) + " " + item->getTimestamp().mid(13), "dd-MM-yyyy hh:mm").toMSecsSinceEpoch();
 
-
     // -----------------------------------------------------
     // items already into the hub
     QVariantList hubItems = m_Hub->items();
+    QVariantMap itemMap;
 
     bool existing = false;
-    QVariantMap itemMap;
     for(int i = 0 ; i < hubItems.length() ; ++i) {
         itemMap = hubItems.at(i).toMap();
 
@@ -465,13 +482,17 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
 
 
 
+    qDebug() << "Current item: " << SubjectNumber << " existing: " << existing << " id: src:" << itemMap["sourceId"].toLongLong() << " msg: " << itemMap["messageid"].toString();
 
     if(existing) {
 
+        qDebug() << "Current item time: " << itemMap["timestamp"].toULongLong() << " new time: " << timestamp;
         if(itemMap["timestamp"].toULongLong() == timestamp) {
             item->deleteLater();
             return;
         }
+
+        qDebug() << "update item. isAddresseeRead: " << item->isAddresseeRead() << " isRead: "  << item->isRead();
 
         itemMap["description"] = item->getTitle();
         itemMap["timestamp"] = timestamp;
@@ -484,11 +505,22 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
             itemId = itemMap["messageid"].toLongLong();
         }
 
+        if(item->isRead()) {
+            itemMap["readCount"] = 0;
+        }
+
+        qDebug() << "item id: " << itemId;
 
         m_Hub->updateHubItem(m_Hub->categoryId(), itemId, itemMap, item->isRead());
 
+        if(!item->isRead()) {
+            qDebug() << "updated mark item as read.";
+            m_Hub->markHubItemRead(m_Hub->categoryId(), itemId);
+        }
+
     } else {
 
+        qDebug() << "new item!";
         QVariantMap entry;
         if(!item->getUrlLastPage().isEmpty())
             entry["url"] = item->getUrlLastPage();
@@ -501,6 +533,7 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
             }
         }
 
+        qDebug() << "insert item into hub";
         m_Hub->addHubItem(m_Hub->categoryId(), entry, item->getAddressee(), item->getTitle(), timestamp, SubjectNumber, SubjectNumber, "",  item->isRead());
 
         qint64 itemId;
@@ -510,7 +543,9 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
             itemId = entry["messageid"].toLongLong();
         }
 
+        qDebug() << "new item id: " << itemId;
         if(!item->isRead()) {
+            qDebug() << "mark new item as already read.";
             m_Hub->markHubItemRead(m_Hub->categoryId(), itemId);
         }
     }
@@ -527,7 +562,7 @@ void HeadlessApplication::getFavoriteThreads() {
     // list green + yellow flags
     const QUrl url(DefineConsts::FORUM_URL + "/forum1f.php?owntopic=1");
 
-
+    qDebug() << "getFavoriteThreads()";
     CookieJar *cookies = new CookieJar();
     cookies->loadFromDisk();
     QNetworkAccessManager *accessManager = new QNetworkAccessManager();
@@ -575,6 +610,8 @@ void HeadlessApplication::parseFav(const QString &page) {
     QRegExp euro("&euro;");
     QRegExp inf("&lt;");
     QRegExp sup("&gt;");
+
+    loadTags();
 
 
     // ----------------------------------------------------------------------------------------------
@@ -730,6 +767,7 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
         item->setColor(0);
     }
 
+    //qDebug() << item->getTitle() << postIDRegExp.cap(1) + "@" + catIDRefExp.cap(1) << item->getColor();
 
     if(item->getColor() == 0) {
         item->deleteLater();
@@ -739,13 +777,14 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
 
     QSettings settings("Amonchakai", "HFR10");
 
+    /*
     qDebug() << item->getColor()
              << settings.value("NotifGreen",false).toBool()
              << settings.value("NotifBlue",false).toBool()
              << settings.value("NotifOrange",false).toBool()
              << settings.value("NotifPink",false).toBool()
              << settings.value("NotifPurple",false).toBool();
-
+     */
     switch(item->getColor()) {
         case 1:
             if(!settings.value("NotifGreen",false).toBool()){
@@ -785,7 +824,6 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
     }
 
 
-    qDebug() << item->getDetailedTimestamp();
 
     QString SubjectNumber = postIDRegExp.cap(1) + QString::number(catIDRefExp.cap(1).toInt()*10000);
     qint64 timestamp = QDateTime::fromString(item->getDetailedTimestamp().mid(0,10) + " " + item->getDetailedTimestamp().mid(23), "dd-MM-yyyy hh:mm").toMSecsSinceEpoch();
@@ -827,8 +865,8 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
             itemId = itemMap["messageid"].toLongLong();
         }
 
-
-        m_Hub->updateHubItem(m_Hub->categoryId(), itemId, itemMap, item->isRead());
+        qDebug() << "New favorite. update post --> notif.";
+        m_Hub->updateHubItem(m_Hub->categoryId(), itemId, itemMap, true);
 
     } else {
 
@@ -844,18 +882,9 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
             }
         }
 
-        m_Hub->addHubItem(m_Hub->categoryId(), entry, item->getLastAuthor(), item->getTitle(), timestamp, SubjectNumber, SubjectNumber, "",  item->isRead());
+        qDebug() << "New favorite. add new entry --> notif.";
+        m_Hub->addHubItem(m_Hub->categoryId(), entry, item->getTitle(), item->getLastAuthor(), timestamp, SubjectNumber, SubjectNumber, "",  true);
 
-        qint64 itemId;
-        if (entry["sourceId"].toString().length() > 0) {
-            itemId = entry["sourceId"].toLongLong();
-        } else if (entry["messageid"].toString().length() > 0) {
-            itemId = entry["messageid"].toLongLong();
-        }
-
-        if(!item->isRead()) {
-            m_Hub->markHubItemRead(m_Hub->categoryId(), itemId);
-        }
     }
 
     item->deleteLater();
@@ -877,10 +906,12 @@ void HeadlessApplication::loadTags() {
     if (!QFile::exists(directory)) {
         return;
     }
+    m_TopicTags.clear();
 
     QFile file(directory + "/NotificationList.txt");
 
     if (file.open(QIODevice::ReadOnly)) {
+
         QDataStream stream(&file);
 
         int nbTags = 0;

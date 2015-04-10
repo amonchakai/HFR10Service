@@ -58,6 +58,7 @@ private:
 
     QList<QString>                                   m_CategoriesLabels;
     QMap<QString, int>                               m_TopicTags;
+    static bool                                      m_Logs;
 
 public:
     HeadlessApplication(bb::Application *app);
@@ -70,6 +71,7 @@ public:
     void loadTags();
     int getTagValue(const QString &key);
 
+    static bool logEnabed()                         { return m_Logs; }
 
 public Q_SLOTS:
     void resynchHub();
