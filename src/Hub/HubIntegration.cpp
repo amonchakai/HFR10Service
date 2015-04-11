@@ -21,8 +21,8 @@ HubIntegration::HubIntegration(UDSUtil* udsUtil, HubCache* hubCache) : HubAccoun
     _serverName = "";
     _iconFilename = "images/whiteFace.png";
     _lockedIconFilename = "images/whiteFace.png";
-    _composeIconFilename = "images/icon_write.png";
-    _supportsCompose = false;
+    _composeIconFilename = "images/hfr.png";
+    _supportsCompose = true;
     _supportsMarkRead = true;
     _supportsMarkUnread = true;
     _headlessTarget = "com.amonchakai.HFR10Service";
