@@ -497,6 +497,7 @@ void HeadlessApplication::parseMessageListing(bool read, const QString &threadLi
         itemMap["description"] = item->getTitle();
         itemMap["timestamp"] = timestamp;
         itemMap["readCount"] = item->isRead();
+        itemMap["url"] = item->getUrlLastPage();
 
         qint64 itemId;
         if (itemMap["sourceId"].toString().length() > 0) {
@@ -857,6 +858,16 @@ void HeadlessApplication::parseThreadListing(const QString &category, const QStr
         itemMap["description"] = item->getLastAuthor();
         itemMap["timestamp"] = timestamp;
         itemMap["readCount"] = item->isRead();
+
+        if(!item->getUrlLastPostRead().isEmpty())
+            itemMap["url"] = item->getUrlLastPostRead();
+        else {
+            if(!item->getUrlLastPage().isEmpty())
+                itemMap["url"] = item->getUrlFirstPage();
+            else {
+                itemMap["url"] = item->getUrlFirstPage();
+            }
+        }
 
         qint64 itemId;
         if (itemMap["sourceId"].toString().length() > 0) {
