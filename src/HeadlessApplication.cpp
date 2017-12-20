@@ -294,6 +294,12 @@ void HeadlessApplication::getPrivateMessages() {
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
 
 
+    QSslConfiguration sslConfig = request.sslConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    sslConfig.setPeerVerifyDepth(1);
+    sslConfig.setProtocol(QSsl::TlsV1);
+    sslConfig.setSslOption(QSsl::SslOptionDisableSessionTickets, true);
+
 
     QNetworkReply* reply = accessManager->get(request);
     bool ok = connect(reply, SIGNAL(finished()), this, SLOT(checkReply()));
@@ -573,7 +579,11 @@ void HeadlessApplication::getFavoriteThreads() {
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
 
-
+    QSslConfiguration sslConfig = request.sslConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    sslConfig.setPeerVerifyDepth(1);
+    sslConfig.setProtocol(QSsl::TlsV1);
+    sslConfig.setSslOption(QSsl::SslOptionDisableSessionTickets, true);
 
     QNetworkReply* reply = accessManager->get(request);
     bool ok = connect(reply, SIGNAL(finished()), this, SLOT(checkReplyFav()));
